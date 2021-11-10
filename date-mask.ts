@@ -82,7 +82,7 @@ export class DateMask {
       }
     }
 
-    // case 4: select all before delete
+    // case 4: select all before delete to clear input
     if (
       isDelete &&
       element.selectionStart === 0 &&
