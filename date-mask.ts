@@ -113,7 +113,7 @@ export class DateMask {
     const daysInMonth = new Date(year, month, 0, 0, 0).getDate();
     const date = this.optional.mask === 'mm/dd/yyyy' ? +dates[1] : +dates[0];
 
-    // case 2: date ceil limit
+    // case 2: date ceil
     if (date > daysInMonth) {
       return false;
     }
