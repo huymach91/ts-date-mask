@@ -1,6 +1,5 @@
 export interface IDateMaskOptional {
   mask: 'mm/dd/yyyy' | 'dd/mm/yyyy';
-  delimiter: '/' | '-';
 }
 
 export class DateMask {
@@ -14,12 +13,12 @@ export class DateMask {
   private value: string;
 
   private maxCaretPosition: number;
+  private delimiter: string = '/';
 
   constructor(
     private element: HTMLInputElement,
     private optional: IDateMaskOptional = {
       mask: 'mm/dd/yyyy',
-      delimiter: '/',
     }
   ) {
     this.init();
@@ -58,7 +57,7 @@ export class DateMask {
     // case 2: typing number
     if (isNumberKey && caret < this.maxCaretPosition) {
       let localCaret = caret;
-      if (charAtCaret === this.optional.delimiter) {
+      if (charAtCaret === this.delimiter) {
         localCaret += 1;
       }
       this.insertChar(localCaret, key);
@@ -71,7 +70,7 @@ export class DateMask {
       caret <= this.maxCaretPosition
     ) {
       const charAtCaretFromMask = this.optional.mask[index];
-      if (charAtCaretFromMask === this.optional.delimiter) {
+      if (charAtCaretFromMask === this.delimiter) {
         const previousIndex = index - 1;
         this.element.setRangeText(
           this.optional.mask[previousIndex],
@@ -99,19 +98,26 @@ export class DateMask {
 
   private validate() {
     const value = this.element.value;
-    if (this.optional.mask === 'mm/dd/yyyy') {
-      const dates = value.split(this.optional.delimiter) as Array<string>;
-      const year = +dates[2];
-      const month = +dates[0] - 1;
-      const date = +dates[1];
-      return new Date(year, month, date, 0, 0, 0).toString() === 'Invalid Date'
-        ? false
-        : true;
+    // case 1: valid format
+    var date_regex =
+      this.optional.mask === 'mm/dd/yyyy'
+        ? /^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$/
+        : /^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/;
+    if (!date_regex.test(value)) {
+      return false;
     }
-    const dates = value.split(this.optional.delimiter) as Array<string>;
+
+    const dates = value.split(this.delimiter) as Array<string>;
     const year = +dates[2];
-    const month = +dates[1] - 1;
-    const date = +dates[0];
-    return new Date(year, month, date, 0, 0, 0).toString() === 'Invalid Date';
+    const month = this.optional.mask === 'mm/dd/yyyy' ? +dates[0] : +dates[1];
+    const daysInMonth = new Date(year, month, 0, 0, 0).getDate();
+    const date = this.optional.mask === 'mm/dd/yyyy' ? +dates[1] : +dates[0];
+
+    // case 2: date ceil limit
+    if (date > daysInMonth) {
+      return false;
+    }
+
+    return true;
   }
 }
