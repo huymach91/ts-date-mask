@@ -5,10 +5,9 @@ export interface IDateMaskOptional {
 
 export class DateMask {
   private keydownRef: any;
-  private changeRef: any;
+  private blurRef: any;
 
   private arrowKeys: Array<string> = ['ArrowLeft', 'ArrowRight'];
-  private removeKeys: Array<string> = ['Backspace', 'Delete'];
   private moveKeys: Array<string> = ['Home', 'End'];
 
   private display: string;
@@ -28,9 +27,9 @@ export class DateMask {
 
   private init() {
     this.keydownRef = this.keydown.bind(this);
-    this.changeRef = this.change.bind(this);
+    this.blurRef = this.blur.bind(this);
     this.element.addEventListener('keydown', this.keydownRef);
-    this.element.addEventListener('change', this.changeRef);
+    this.element.addEventListener('blur', this.blurRef);
     this.display = this.optional.mask;
     this.element.value = this.display;
     this.maxCaretPosition = this.element.selectionEnd;
@@ -45,17 +44,17 @@ export class DateMask {
     const isSelect = event.ctrlKey && key === 'a';
     const isCopy = event.ctrlKey && key === 'c';
     const isArrowKey = this.arrowKeys.includes(key);
-    const isRemoveKey = this.removeKeys.includes(key);
     const isMoveKey = this.moveKeys.includes(key);
 
     const caret: number = element.selectionStart;
     const charAtCaret = value.charAt(caret);
 
     // case 1: not match any conditions below
-    if (isSelect || isCopy || isRemoveKey || isArrowKey || isMoveKey) {
+    if (isSelect || isCopy || isArrowKey || isMoveKey) {
       return true;
     }
 
+    // case 2: typing number
     if (isNumberKey && caret < this.maxCaretPosition) {
       let localCaret = caret;
       if (charAtCaret === this.optional.delimiter) {
@@ -64,17 +63,31 @@ export class DateMask {
       this.insertChar(localCaret, key);
     }
 
+    // case 3: typing backspace
+    if (key === 'Backspace') {
+      this.insertChar(caret, '', caret - 1);
+    }
+
+    // case 4: typing delete
+    if (key === 'Delete') {
+      this.insertChar(caret, '');
+    }
+
     event.preventDefault();
   }
 
-  change() {
-    console.log('changed');
+  blur() {
     console.log(this.validate());
   }
 
-  private insertChar(position: number, insertValue: string) {
+  private insertChar(
+    position: number,
+    insertValue: string,
+    nextCaret?: number
+  ) {
+    const newCaret = nextCaret ? nextCaret : position + 1;
     this.element.setRangeText(insertValue, position, position + 1);
-    this.element.setSelectionRange(position + 1, position + 1);
+    this.element.setSelectionRange(newCaret, newCaret);
   }
 
   private validate() {
