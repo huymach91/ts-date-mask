@@ -65,29 +65,23 @@ export class DateMask {
     }
 
     // case 3: typing backspace
-    if (key === 'Backspace' && index >= 0) {
+    if (
+      (key === 'Backspace' || key === 'Delete') &&
+      index >= 0 &&
+      caret <= this.maxCaretPosition
+    ) {
       const charAtCaretFromMask = this.optional.mask[index];
       if (charAtCaretFromMask === this.optional.delimiter) {
-        const backIndex = index - 1;
+        const previousIndex = index - 1;
         this.element.setRangeText(
-          this.optional.mask[backIndex],
-          backIndex,
+          this.optional.mask[previousIndex],
+          previousIndex,
           index
         );
-        this.element.setSelectionRange(backIndex, backIndex);
+        this.element.setSelectionRange(previousIndex, previousIndex);
       } else {
         this.element.setRangeText(charAtCaretFromMask, index, index + 1);
         this.element.setSelectionRange(index, index);
-      }
-    }
-
-    // case 4: typing delete
-    if (key === 'Delete') {
-      const charAtCaretFromMask = this.optional.mask[caret];
-      if (charAtCaretFromMask !== this.optional.delimiter) {
-        this.insertChar(caret, charAtCaretFromMask);
-      } else {
-        this.element.setSelectionRange(caret + 1, caret + 1);
       }
     }
 
@@ -106,12 +100,18 @@ export class DateMask {
   private validate() {
     const value = this.element.value;
     if (this.optional.mask === 'mm/dd/yyyy') {
-      return new Date(value).toString() === 'Invalid Date' ? false : true;
+      const dates = value.split(this.optional.delimiter) as Array<string>;
+      const year = +dates[2];
+      const month = +dates[0] - 1;
+      const date = +dates[1];
+      return new Date(year, month, date, 0, 0, 0).toString() === 'Invalid Date'
+        ? false
+        : true;
     }
     const dates = value.split(this.optional.delimiter) as Array<string>;
     const year = +dates[2];
-    const month = +dates[1];
+    const month = +dates[1] - 1;
     const date = +dates[0];
-    return new Date(year, month, date).toString() === 'Invalid Date';
+    return new Date(year, month, date, 0, 0, 0).toString() === 'Invalid Date';
   }
 }
