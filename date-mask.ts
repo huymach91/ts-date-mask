@@ -47,6 +47,7 @@ export class DateMask {
     const isMoveKey = this.moveKeys.includes(key);
 
     const caret: number = element.selectionStart;
+    const index: number = element.selectionStart - 1;
     const charAtCaret = value.charAt(caret);
 
     // case 1: not match any conditions below
@@ -64,13 +65,30 @@ export class DateMask {
     }
 
     // case 3: typing backspace
-    if (key === 'Backspace') {
-      this.insertChar(caret, '', caret - 1);
+    if (key === 'Backspace' && index >= 0) {
+      const charAtCaretFromMask = this.optional.mask[index];
+      if (charAtCaretFromMask === this.optional.delimiter) {
+        const backIndex = index - 1;
+        this.element.setRangeText(
+          this.optional.mask[backIndex],
+          backIndex,
+          index
+        );
+        this.element.setSelectionRange(backIndex, backIndex);
+      } else {
+        this.element.setRangeText(charAtCaretFromMask, index, index + 1);
+        this.element.setSelectionRange(index, index);
+      }
     }
 
     // case 4: typing delete
     if (key === 'Delete') {
-      this.insertChar(caret, '');
+      const charAtCaretFromMask = this.optional.mask[caret];
+      if (charAtCaretFromMask !== this.optional.delimiter) {
+        this.insertChar(caret, charAtCaretFromMask);
+      } else {
+        this.element.setSelectionRange(caret + 1, caret + 1);
+      }
     }
 
     event.preventDefault();
@@ -80,14 +98,9 @@ export class DateMask {
     console.log(this.validate());
   }
 
-  private insertChar(
-    position: number,
-    insertValue: string,
-    nextCaret?: number
-  ) {
-    const newCaret = nextCaret ? nextCaret : position + 1;
+  private insertChar(position: number, insertValue: string) {
     this.element.setRangeText(insertValue, position, position + 1);
-    this.element.setSelectionRange(newCaret, newCaret);
+    this.element.setSelectionRange(position + 1, position + 1);
   }
 
   private validate() {
