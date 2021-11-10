@@ -88,7 +88,11 @@ export class DateMask {
   }
 
   blur() {
-    console.log(this.validate());
+    if (this.validate()) {
+      this.dispathChangeEvent(this.element.value);
+      return;
+    }
+    this.element.value = this.display;
   }
 
   private insertChar(position: number, insertValue: string) {
@@ -119,5 +123,10 @@ export class DateMask {
     }
 
     return true;
+  }
+
+  private dispathChangeEvent(value: string) {
+    const customEvent = new CustomEvent('inputChange', { detail: value });
+    this.element.dispatchEvent(customEvent);
   }
 }
