@@ -30,6 +30,9 @@ export class DateMask {
     this.blurRef = this.blur.bind(this);
     this.element.addEventListener('keydown', this.keydownRef);
     this.element.addEventListener('blur', this.blurRef);
+    this.element.addEventListener('inputChange', (event: any) => {
+      console.log(event.detail);
+    });
     this.display = this.optional.mask;
     this.element.value = this.display;
     this.maxCaretPosition = this.element.selectionEnd;
@@ -96,7 +99,12 @@ export class DateMask {
 
   blur() {
     if (this.validate()) {
-      this.dispathChangeEvent(this.element.value);
+      const value = this.element.value;
+      const format = value.replace(/\//g, '-');
+      this.dispathChangeEvent({
+        format: format,
+        value: value,
+      });
       return;
     }
     this.element.value = this.display;
@@ -132,8 +140,8 @@ export class DateMask {
     return true;
   }
 
-  private dispathChangeEvent(value: string) {
-    const customEvent = new CustomEvent('inputChange', { detail: value });
+  private dispathChangeEvent(detail: any) {
+    const customEvent = new CustomEvent('inputChange', { detail: detail });
     this.element.dispatchEvent(customEvent);
   }
 }
