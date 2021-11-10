@@ -7,6 +7,7 @@ export class DateMask {
   private blurRef: any;
 
   private arrowKeys: Array<string> = ['ArrowLeft', 'ArrowRight'];
+  private deleteKeys: Array<string> = ['Backspace', 'Delete'];
   private moveKeys: Array<string> = ['Home', 'End'];
 
   private display: string;
@@ -18,7 +19,7 @@ export class DateMask {
   constructor(
     private element: HTMLInputElement,
     private optional: IDateMaskOptional = {
-      mask: 'mm/dd/yyyy',
+      mask: 'dd/mm/yyyy',
     }
   ) {
     this.init();
@@ -44,6 +45,7 @@ export class DateMask {
     const isCopy = event.ctrlKey && key === 'c';
     const isArrowKey = this.arrowKeys.includes(key);
     const isMoveKey = this.moveKeys.includes(key);
+    const isDelete = this.deleteKeys.includes(key);
 
     const caret: number = element.selectionStart;
     const index: number = element.selectionStart - 1;
@@ -64,24 +66,29 @@ export class DateMask {
     }
 
     // case 3: typing backspace
-    if (
-      (key === 'Backspace' || key === 'Delete') &&
-      index >= 0 &&
-      caret <= this.maxCaretPosition
-    ) {
+    if (isDelete && index >= 0 && caret <= this.maxCaretPosition) {
       const charAtCaretFromMask = this.optional.mask[index];
       if (charAtCaretFromMask === this.delimiter) {
         const previousIndex = index - 1;
-        this.element.setRangeText(
+        element.setRangeText(
           this.optional.mask[previousIndex],
           previousIndex,
           index
         );
-        this.element.setSelectionRange(previousIndex, previousIndex);
+        element.setSelectionRange(previousIndex, previousIndex);
       } else {
-        this.element.setRangeText(charAtCaretFromMask, index, index + 1);
-        this.element.setSelectionRange(index, index);
+        element.setRangeText(charAtCaretFromMask, index, index + 1);
+        element.setSelectionRange(index, index);
       }
+    }
+
+    // case 4: select all before delete
+    if (
+      isDelete &&
+      element.selectionStart === 0 &&
+      element.selectionEnd === this.maxCaretPosition
+    ) {
+      element.value = this.display;
     }
 
     event.preventDefault();
