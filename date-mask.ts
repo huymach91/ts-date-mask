@@ -5,6 +5,7 @@ export interface IDateMaskOptional {
 
 export class DateMask {
   private keydownRef: any;
+  private changeRef: any;
 
   private arrowKeys: Array<string> = ['ArrowLeft', 'ArrowRight'];
   private removeKeys: Array<string> = ['Backspace', 'Delete'];
@@ -27,7 +28,9 @@ export class DateMask {
 
   private init() {
     this.keydownRef = this.keydown.bind(this);
+    this.changeRef = this.change.bind(this);
     this.element.addEventListener('keydown', this.keydownRef);
+    this.element.addEventListener('change', this.changeRef);
     this.display = this.optional.mask;
     this.element.value = this.display;
     this.maxCaretPosition = this.element.selectionEnd;
@@ -64,10 +67,25 @@ export class DateMask {
     event.preventDefault();
   }
 
+  change() {
+    console.log('changed');
+    console.log(this.validate());
+  }
+
   private insertChar(position: number, insertValue: string) {
     this.element.setRangeText(insertValue, position, position + 1);
     this.element.setSelectionRange(position + 1, position + 1);
   }
 
-  private validate() {}
+  private validate() {
+    const value = this.element.value;
+    if (this.optional.mask === 'mm/dd/yyyy') {
+      return new Date(value).toString() === 'Invalid Date' ? false : true;
+    }
+    const dates = value.split(this.optional.delimiter) as Array<string>;
+    const year = +dates[2];
+    const month = +dates[1];
+    const date = +dates[0];
+    return new Date(year, month, date).toString() === 'Invalid Date';
+  }
 }
