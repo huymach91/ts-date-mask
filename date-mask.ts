@@ -68,4 +68,6 @@ export class DateMask {
     this.element.setRangeText(insertValue, position, position + 1);
     this.element.setSelectionRange(position + 1, position + 1);
   }
+
+  private validate() {}
 }
