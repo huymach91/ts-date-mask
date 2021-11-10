@@ -1,3 +1,5 @@
-h1, h2 {
-  font-family: Lato;
+input {
+  padding: 5px;
+  border-radius: 5px;
+  border-width: 1px;
 }
